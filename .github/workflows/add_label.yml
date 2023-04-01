@@ -1,0 +1,41 @@
+name: Add label to the Issue/PR
+
+on:
+  issues:
+    types: [opened, edited]
+  pull_request:
+    types: [opened, edited]
+
+env:
+  LABEL: test_label
+
+jobs:
+  labeler:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+
+      - name: Create a label on a Issue
+        if: ${{ github.event_name == 'issues' }}
+        run: | 
+          URL="https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER/labels"
+          echo "Issue url $URL"
+          curl --request POST \
+          --header 'authorization: Bearer ${{ env.GITHUB_TOKEN }}' \
+          --header 'content-type: application/json' \
+          --url $URL \
+          --data '{"labels":["${{ env.LABEL }}"]}' \
+          --fail
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
+
+      - name: Create a label on the PR
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          gh pr edit $PR_NUMBER --add-label "$LABEL"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
