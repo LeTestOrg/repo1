@@ -17,13 +17,10 @@ jobs:
       pull-requests: write
     steps:
 
-      - uses: actions/checkout@v3
-
       - name: Create a label on a Issue
         if: ${{ github.event_name == 'issues' }}
         run: | 
           URL="https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER/labels"
-          echo "Issue url $URL"
           curl --request POST \
           --header 'authorization: Bearer ${{ env.GITHUB_TOKEN }}' \
           --header 'content-type: application/json' \
@@ -38,7 +35,13 @@ jobs:
       - name: Create a label on the PR
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-           gh pr edit $PR_NUMBER --add-label "$LABEL"
+          URL="https://api.github.com/repos/$REPO/issues/$PR_NUMBER/labels"
+          curl --request POST \
+          --header 'authorization: Bearer ${{ env.GITHUB_TOKEN }}' \
+          --header 'content-type: application/json' \
+          --url $URL \
+          --data '{"labels":["${{ env.LABEL }}"]}' \
+          --fail
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
