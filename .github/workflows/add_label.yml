@@ -26,13 +26,17 @@ jobs:
         run: echo '${{ toJSON(strategy) }}'
       - name: Dump matrix context
         run: echo '${{ toJSON(matrix) }}'
-        
+
   labeler:
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
-      pull-requests: write
+    permissions: write-all
     steps:
+
+      - name: Get associated projects
+        uses: eduardomp/get-projects-by-issue-action@main
+        with:
+          issue_number: ${{ github.event.issue.number }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create a label on a Issue
         if: ${{ github.event_name == 'issues' }}
@@ -47,6 +51,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_HTML_URL: ${{ github.event.issue.html_url }}
+          ORG: ${{ github.event.organization.login }}
           REPO: ${{ github.repository }}
 
       - name: Create a label on the PR
